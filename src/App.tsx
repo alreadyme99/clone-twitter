@@ -1,35 +1,76 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import styled, { createGlobalStyle } from 'styled-components';
+import LoadingScreen from './components/loading-screen';
+import { auth } from './routes/firebase';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import ProtectedRoute from './components/protected-route';
+import Layout from './routes/create-account';
+import Home from './routes/home';
+import Profile from './routes/profile';
+import Login from './routes/login';
+import CreateAccount from './routes/create-account';
+import reset from 'styled-reset';
+
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <ProtectedRoute><Layout/></ProtectedRoute>,
+    children: [
+      {
+        path: "/",
+        element: <Home />
+      },
+      {
+        path: "profile",
+        element: <Profile />
+      }
+    ]
+  },
+  {
+    path: "/login",
+    element: <Login />
+  },
+  {
+    path: "/create-account",
+    element: <CreateAccount/>
+  }
+]);
+
+const GlobalStyled = createGlobalStyle`
+  ${reset};
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background-color: white;
+    color: black;
+  }
+`
+
+const Wrapper = styled.div`
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+`
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isLoading, setLoading] = useState(true);
+  const init = async() => {
+    await auth.authStateReady();
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    init()
+  },[]);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Wrapper>
+      <LoadingScreen/>
+      {isLoading ? <LoadingScreen/> : <RouterProvider router={router}/>}
+    </Wrapper>
   )
 }
 
-export default App
+export default App;
